@@ -7,7 +7,6 @@
 
 using namespace std;
 
-// Class 1: Author
 class Author {
 private:
     string name;
@@ -17,7 +16,6 @@ public:
     void setName(string n) { name = n; }
 };
 
-// Class 2: Document
 class Document {
 protected:
     string id;
@@ -35,7 +33,6 @@ public:
     virtual void displayInfo() const = 0; 
 };
 
-// Class 3: Book
 class Book : public Document {
 private:
     Author author;
@@ -50,7 +47,6 @@ public:
     }
 };
 
-// Class 4: Magazine
 class Magazine : public Document {
 private:
     int issueNumber;
@@ -64,7 +60,6 @@ public:
     }
 };
 
-// Class 5: Member
 class Member {
 protected:
     string memberId;
@@ -80,7 +75,6 @@ public:
     virtual void displayMember() const = 0;
 };
 
-// Class 6: RegularMember
 class RegularMember : public Member {
 public:
     RegularMember(string id, string name) : Member(id, name) {}
@@ -94,7 +88,6 @@ public:
     }
 };
 
-// Class 7: PremiumMember
 class PremiumMember : public Member {
 public:
     PremiumMember(string id, string name) : Member(id, name) {}
@@ -108,19 +101,17 @@ public:
     }
 };
 
-// Class 8: Librarian
 class Librarian {
 private:
     string employeeId;
     string name;
 public:
-    Librarian(string id, string name) : employeeId(id), name(name) {}
+    Librarian(string id = "", string name = "") : employeeId(id), name(name) {}
     void displayLibrarian() const {
         cout << "Thủ thư phụ trách: " << name << " (ID: " << employeeId << ")\n";
     }
 };
 
-// Class 9: BorrowRecord
 class BorrowRecord {
 private:
     string recordId;
@@ -137,7 +128,6 @@ public:
     }
 };
 
-// Class 10: Fine
 class Fine {
 private:
     string memberId;
@@ -151,7 +141,6 @@ public:
     }
 };
 
-// Class 11: LibrarySystem
 class LibrarySystem {
 private:
     vector<unique_ptr<Document>> documents;
@@ -226,7 +215,6 @@ public:
     }
 };
 
-// Class 12: ApplicationInterface
 class ApplicationInterface {
 private:
     LibrarySystem system;
@@ -237,12 +225,28 @@ private:
         fflush(stdin);
     }
 
+    void loginLibrarian() {
+        string id, name;
+        cout << "=============================================\n";
+        cout << "             ĐĂNG NHẬP HỆ THỐNG              \n";
+        cout << "=============================================\n";
+        cout << "Nhập mã số thủ thư: ";
+        cin >> id;
+        clearInputBuffer();
+        cout << "Nhập họ và tên thủ thư: ";
+        getline(cin, name);
+        currentLibrarian = Librarian(id, name);
+        cout << "=> Đăng nhập thành công!\n";
+    }
+
 public:
-    ApplicationInterface() : currentLibrarian("D00", "Đình Duy") {
+    ApplicationInterface() {
         system.initData();
     }
 
     void run() {
+        loginLibrarian();
+        
         int choice;
         do {
             cout << "\n=============================================\n";
