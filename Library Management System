@@ -1,0 +1,355 @@
+#include <Windows.h>
+#include <locale.h> 
+#include <iostream>
+#include <string>
+#include <vector>
+#include <memory>
+
+using namespace std;
+
+// Class 1: Author
+class Author {
+private:
+    string name;
+public:
+    Author(string name = "") : name(name) {}
+    string getName() const { return name; }
+    void setName(string n) { name = n; }
+};
+
+// Class 2: Document
+class Document {
+protected:
+    string id;
+    string title;
+    string publisher;
+public:
+    Document(string id, string title, string publisher) 
+        : id(id), title(title), publisher(publisher) {}
+    
+    virtual ~Document() {}
+
+    string getId() const { return id; }
+    string getTitle() const { return title; }
+
+    virtual void displayInfo() const = 0; 
+};
+
+// Class 3: Book
+class Book : public Document {
+private:
+    Author author;
+    string isbn;
+public:
+    Book(string id, string title, string publisher, Author author, string isbn)
+        : Document(id, title, publisher), author(author), isbn(isbn) {}
+
+    void displayInfo() const override {
+        cout << "[Sách] ID: " << id << " | Tên: " << title 
+             << " | Tác giả: " << author.getName() << " | ISBN: " << isbn << "\n";
+    }
+};
+
+// Class 4: Magazine
+class Magazine : public Document {
+private:
+    int issueNumber;
+public:
+    Magazine(string id, string title, string publisher, int issueNumber)
+        : Document(id, title, publisher), issueNumber(issueNumber) {}
+
+    void displayInfo() const override {
+        cout << "[Tạp chí] ID: " << id << " | Tên: " << title 
+             << " | Số phát hành: " << issueNumber << "\n";
+    }
+};
+
+// Class 5: Member
+class Member {
+protected:
+    string memberId;
+    string name;
+public:
+    Member(string id, string name) : memberId(id), name(name) {}
+    virtual ~Member() {}
+
+    string getMemberId() const { return memberId; }
+    string getName() const { return name; }
+
+    virtual double calculateFine(int daysOverdue) const = 0;
+    virtual void displayMember() const = 0;
+};
+
+// Class 6: RegularMember
+class RegularMember : public Member {
+public:
+    RegularMember(string id, string name) : Member(id, name) {}
+
+    double calculateFine(int daysOverdue) const override {
+        return daysOverdue * 5000.0;
+    }
+
+    void displayMember() const override {
+        cout << "[Thành viên Thường] ID: " << memberId << " | Tên: " << name << "\n";
+    }
+};
+
+// Class 7: PremiumMember
+class PremiumMember : public Member {
+public:
+    PremiumMember(string id, string name) : Member(id, name) {}
+
+    double calculateFine(int daysOverdue) const override {
+        return daysOverdue * 2000.0;
+    }
+
+    void displayMember() const override {
+        cout << "[Thành viên VIP] ID: " << memberId << " | Tên: " << name << "\n";
+    }
+};
+
+// Class 8: Librarian
+class Librarian {
+private:
+    string employeeId;
+    string name;
+public:
+    Librarian(string id, string name) : employeeId(id), name(name) {}
+    void displayLibrarian() const {
+        cout << "Thủ thư phụ trách: " << name << " (ID: " << employeeId << ")\n";
+    }
+};
+
+// Class 9: BorrowRecord
+class BorrowRecord {
+private:
+    string recordId;
+    string memberId;
+    string docId;
+    int durationDays;
+public:
+    BorrowRecord(string rId, string mId, string dId, int days)
+        : recordId(rId), memberId(mId), docId(dId), durationDays(days) {}
+
+    void displayRecord() const {
+        cout << "Mã phiếu: " << recordId << " | Mã Độc giả: " << memberId 
+             << " | Mã Sách: " << docId << " | Hạn mượn: " << durationDays << " ngày\n";
+    }
+};
+
+// Class 10: Fine
+class Fine {
+private:
+    string memberId;
+    double amount;
+public:
+    Fine(string mId, double amt) : memberId(mId), amount(amt) {}
+    void displayFine() const {
+        if (amount > 0) {
+            cout << "Độc giả ID " << memberId << " đang nợ phạt: " << amount << " VND\n";
+        }
+    }
+};
+
+// Class 11: LibrarySystem
+class LibrarySystem {
+private:
+    vector<unique_ptr<Document>> documents;
+    vector<unique_ptr<Member>> members;
+    vector<BorrowRecord> records;
+    vector<Fine> fines;
+public:
+    void initData() {
+        documents.push_back(make_unique<Book>("D01", "Lap Trinh OOP C++", "NXB Giao Duc", Author("Bui Trong Hieu"), "123-456"));
+        documents.push_back(make_unique<Magazine>("D02", "Tap Chi Cong Nghe 2026", "NXB Khoa Hoc", 12));
+        
+        members.push_back(make_unique<RegularMember>("M01", "Nguyen Van A"));
+        members.push_back(make_unique<PremiumMember>("M02", "Tran Thi B (VIP)"));
+    }
+    
+    void addDocument(unique_ptr<Document> doc) {
+        documents.push_back(move(doc));
+        cout << "=> Thêm tài liệu thành công!\n";
+    }
+
+    void addMember(unique_ptr<Member> mem) {
+        members.push_back(move(mem));
+        cout << "=> Thêm độc giả thành công!\n";
+    }
+
+    void showAllDocuments() const {
+        cout << "\n--- DANH SÁCH TÀI LIỆU TRONG THƯ VIỆN ---\n";
+        if (documents.empty()) cout << "(Thư viện trống)\n";
+        for (const auto& doc : documents) {
+            doc->displayInfo();
+        }
+    }
+
+    void showAllMembers() const {
+        cout << "\n--- DANH SÁCH ĐỘC GIẢ ---\n";
+        if (members.empty()) cout << "(Không có độc giả nào)\n";
+        for (const auto& mem : members) {
+            mem->displayMember();
+        }
+    }
+
+    void borrowBook(string rId, string mId, string dId) {
+        records.push_back(BorrowRecord(rId, mId, dId, 14));
+        cout << "=> Đăng ký mượn sách thành công!\n";
+    }
+
+    void showAllRecords() const {
+        cout << "\n--- DANH SÁCH PHIẾU MƯỢN ---\n";
+        if (records.empty()) cout << "(Chưa có phiếu mượn nào)\n";
+        for (const auto& rec : records) rec.displayRecord();
+    }
+
+    void processReturnAndFine(string mId, int daysOverdue) {
+        for (const auto& mem : members) {
+            if (mem->getMemberId() == mId) {
+                double fineAmt = mem->calculateFine(daysOverdue);
+                if (fineAmt > 0) {
+                    fines.push_back(Fine(mId, fineAmt));
+                    cout << "=> Trả sách trễ hạn! Độc giả " << mem->getName() 
+                         << " bị phạt: " << fineAmt << " VND\n";
+                    return;
+                }
+            }
+        }
+        cout << "=> Trả sách thành công (Không trễ hạn).\n";
+    }
+
+    void showAllFines() const {
+        cout << "\n--- DANH SÁCH PHẠT TIỀN ---\n";
+        if (fines.empty()) cout << "(Không có ai bị phạt)\n";
+        for (const auto& f : fines) f.displayFine();
+    }
+};
+
+// Class 12: ApplicationInterface
+class ApplicationInterface {
+private:
+    LibrarySystem system;
+    Librarian currentLibrarian;
+
+    void clearInputBuffer() {
+        cin.clear();
+        fflush(stdin);
+    }
+
+public:
+    ApplicationInterface() : currentLibrarian("D00", "Đình Duy") {
+        system.initData();
+    }
+
+    void run() {
+        int choice;
+        do {
+            cout << "\n=============================================\n";
+            cout << "       HỆ THỐNG QUẢN LÝ THƯ VIỆN (OOP)       \n";
+            cout << "=============================================\n";
+            currentLibrarian.displayLibrarian();
+            cout << "1. Xem danh sách tất cả tài liệu\n";
+            cout << "2. Xem danh sách độc giả\n";
+            cout << "3. Thêm tài liệu mới vào thư viện\n";
+            cout << "4. Thêm độc giả mới\n";
+            cout << "5. Đăng ký mượn tài liệu\n";
+            cout << "6. Xem danh sách phiếu mượn\n";
+            cout << "7. Xử lý trả sách & tính tiền phạt quá hạn\n";
+            cout << "8. Xem danh sách phạt tiền\n";
+            cout << "0. Thoát chương trình\n";
+            cout << "Lựa chọn của bạn: ";
+            cin >> choice;
+
+            switch (choice) {
+                case 1:
+                    system.showAllDocuments();
+                    break;
+                case 2:
+                    system.showAllMembers();
+                    break;
+                case 3: {
+                    int type;
+                    string id, title, publisher;
+                    cout << "\n--- THÊM TÀI LIỆU MỚI ---\n";
+                    cout << "Chọn loại tài liệu (1. Sách | 2. Tạp chí): "; cin >> type;
+                    clearInputBuffer();
+                    cout << "Nhập mã tài liệu: "; cin >> id;
+                    clearInputBuffer();
+                    cout << "Nhập tên tài liệu: "; getline(cin, title);
+                    cout << "Nhập nhà xuất bản: "; getline(cin, publisher);
+
+                    if (type == 1) {
+                        string authorName, isbn;
+                        cout << "Nhập tên tác giả: "; getline(cin, authorName);
+                        cout << "Nhập mã ISBN: "; cin >> isbn;
+                        system.addDocument(make_unique<Book>(id, title, publisher, Author(authorName), isbn));
+                    } else {
+                        int issueNum;
+                        cout << "Nhập số phát hành: "; cin >> issueNum;
+                        system.addDocument(make_unique<Magazine>(id, title, publisher, issueNum));
+                    }
+                    break;
+                }
+                case 4: {
+                    int type;
+                    string id, name;
+                    cout << "\n--- THÊM ĐỘC GIẢ MỚI ---\n";
+                    cout << "Chọn loại thành viên (1. Thường | 2. VIP): "; cin >> type;
+                    clearInputBuffer();
+                    cout << "Nhập mã độc giả: "; cin >> id;
+                    clearInputBuffer();
+                    cout << "Nhập họ và tên độc giả: "; getline(cin, name);
+
+                    if (type == 1) {
+                        system.addMember(make_unique<RegularMember>(id, name));
+                    } else {
+                        system.addMember(make_unique<PremiumMember>(id, name));
+                    }
+                    break;
+                }
+                case 5: {
+                    string rId, mId, dId;
+                    cout << "\n--- ĐĂNG KÝ MƯỢN TÀI LIỆU ---\n";
+                    cout << "Nhập mã phiếu mượn mới (ví dụ BR01): "; cin >> rId;
+                    cout << "Nhập mã độc giả: "; cin >> mId;
+                    cout << "Nhập mã tài liệu muốn mượn: "; cin >> dId;
+                    system.borrowBook(rId, mId, dId);
+                    break;
+                }
+                case 6:
+                    system.showAllRecords();
+                    break;
+                case 7: {
+                    string mId; int days;
+                    cout << "\n--- XỬ LÝ TRẢ SÁCH ---\n";
+                    cout << "Nhập mã độc giả trả sách: "; cin >> mId;
+                    cout << "Nhập số ngày quá hạn (0 nếu đúng hạn): "; cin >> days;
+                    system.processReturnAndFine(mId, days);
+                    break;
+                }
+                case 8:
+                    system.showAllFines();
+                    break;
+                case 0:
+                    cout << "Cảm ơn bạn đã sử dụng hệ thống!\n";
+                    break;
+                default:
+                    cout << "Lựa chọn không hợp lệ. Vui lòng nhập lại!\n";
+            }
+        } while (choice != 0);
+    }
+};
+
+int main() {
+#ifdef _WIN32
+    SetConsoleOutputCP(65001);
+    SetConsoleCP(65001);
+#endif
+
+    ApplicationInterface app;
+    cout << "Đang khởi động hệ thống...\n";
+    app.run();
+
+    return 0;
+}
